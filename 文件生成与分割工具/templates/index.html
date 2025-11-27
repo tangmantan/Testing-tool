@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音视频图片文档文件分割工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+            margin-top: 2rem;
+        }
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        .file-info {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .output-file {
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+        .output-file .actions {
+            margin-top: 10px;
+        }
+        .progress {
+            height: 10px;
+            margin-top: 5px;
+        }
+        .alert {
+            margin-top: 15px;
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        .drop-zone {
+            border: 2px dashed #ced4da;
+            border-radius: 5px;
+            padding: 25px;
+            text-align: center;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .drop-zone:hover {
+            border-color: #0d6efd;
+            background-color: #f8f9ff;
+        }
+        .drop-zone.dragover {
+            border-color: #0d6efd;
+            background-color: #f8f9ff;
+        }
+        .format-option {
+            margin-right: 10px;
+        }
+        .file-icon {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+        }
+        .file-details {
+            flex-grow: 1;
+        }
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 5px;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        .custom-toast {
+            min-width: 250px;
+        }
+        /* 导航按钮 */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn span {
+            margin-right: 8px;
+        }
+        
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="text-center mb-4">
+            <h1 class="display-5 fw-bold text-primary">音视频图片文档文件分割工具</h1>
+            <p class="lead">支持指定分割后的文件大小和格式，提供便捷的Web界面操作</p>
+        </header>
+        
+        <a href="/" class="back-btn">
+            <span>←</span>返回首页
+        </a>
+
+        <main>
+            <!-- 文件上传区域 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-cloud-upload me-2"></i>选择文件
+                </div>
+                <div class="card-body">
+                    <div class="drop-zone" id="dropZone">
+                        <i class="bi bi-cloud-arrow-up fs-1 text-primary"></i>
+                        <p class="mt-2 mb-1">拖拽文件到此处或点击选择文件</p>
+                        <p class="text-muted small">支持音视频、图片、文档等多种格式</p>
+                        <input type="file" id="fileInput" style="display: none;">
+                    </div>
+                    
+                    <div id="fileInfo" class="file-info" style="display: none;">
+                        <div class="file-item">
+                            <div class="file-icon" id="fileIcon">
+                                <i class="bi bi-file-earmark"></i>
+                            </div>
+                            <div class="file-details">
+                                <h5 id="fileName">文件名</h5>
+                                <p class="mb-0">大小: <span id="fileSize">0</span> MB | 类型: <span id="fileType">未知</span></p>
+                            </div>
+                            <div class="file-actions">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearFileBtn">
+                                    <i class="bi bi-x-circle me-1"></i>清除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-info btn-sm" id="toggleUploadedFilesBtn">
+                            <i class="bi bi-folder2-open me-1"></i>选择已上传的文件
+                        </button>
+                        <div id="uploadedFilesSection" class="mt-2" style="display: none;">
+                            <div class="card">
+                                <div class="card-header py-2">
+                                    <small class="fw-bold">已上传的文件</small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary float-end" id="refreshUploadedFilesBtn">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body p-2" style="max-height: 200px; overflow-y: auto;">
+                                    <div id="uploadedFilesList">
+                                        <p class="text-muted small">点击刷新按钮加载文件列表</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分割设置区域 -->
+            <div class="card" id="splitSettings" style="display: none;">
+                <div class="card-header">
+                    <i class="bi bi-gear me-2"></i>分割设置
+                </div>
+                <div class="card-body">
+                    <form id="splitForm">
+                        <div class="mb-3">
+                            <label for="targetSize" class="form-label">目标文件大小 (MB)</label>
+                            <input type="number" class="form-control" id="targetSize" min="0.1" step="0.1" required>
+                            <div class="form-text">目前只保留第一个分割后的文件。分割生成的文件存放在output目录下。</div>
+                            <div class="form-text" id="fileCountEstimate" style="display: none !important;">
+                                预计将分割为 <span id="estimatedCount">2</span> 个文件
+                            </div>
+                        </div>
+                        
+                        <!-- 文档分割提示 -->
+                        <div id="documentSplitInfo" class="alert alert-info mb-3" style="display: none;">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>文档分割说明：</strong>由于使用二进制分割，TXT文件分割后可以正常打开，DOCX和PDF文件分割后无法打开。
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">输出格式</label>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="formatType" id="videoFormat" value="video">
+                                        <label class="form-check-label" for="videoFormat">视频格式</label>
+                                    </div>
+                                    <div id="videoFormats" class="mt-2">
+                                        <!-- 视频格式选项将通过JavaScript动态生成 -->
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="formatType" id="audioFormat" value="audio">
+                                        <label class="form-check-label" for="audioFormat">音频格式</label>
+                                    </div>
+                                    <div id="audioFormats" class="mt-2">
+                                        <!-- 音频格式选项将通过JavaScript动态生成 -->
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="formatType" id="imageFormat" value="image">
+                                        <label class="form-check-label" for="imageFormat">图片格式</label>
+                                    </div>
+                                    <div id="imageFormats" class="mt-2">
+                                        <!-- 图片格式选项将通过JavaScript动态生成 -->
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="formatType" id="documentFormat" value="document">
+                                        <label class="form-check-label" for="documentFormat">文档格式</label>
+                                    </div>
+                                    <div id="documentFormats" class="mt-2">
+                                        <!-- 文档格式选项将通过JavaScript动态生成 -->
+                                    </div>
+                                    <small class="text-muted d-block mt-1">支持PDF、Word、Excel等格式</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="splitBtn">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                                开始分割
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 分割结果区域 -->
+            <div class="card" id="splitResults" style="display: none;">
+                <div class="card-header">
+                    <i class="bi bi-check-circle me-2"></i>分割结果
+                </div>
+                <div class="card-body">
+                    <div id="outputFiles">
+                        <!-- 输出文件列表将通过JavaScript动态生成 -->
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" class="btn btn-danger" id="deleteAllBtn">
+                            <i class="bi bi-trash me-2"></i>删除所有文件
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 文件列表区域 -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-folder2-open me-2"></i>输出文件列表
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="filesTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="current-tab" data-bs-toggle="tab" data-bs-target="#current" type="button" role="tab" aria-controls="current" aria-selected="true">当前分割结果</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" aria-controls="all" aria-selected="false">所有输出文件</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="filesTabContent">
+                        <div class="tab-pane fade show active" id="current" role="tabpanel" aria-labelledby="current-tab">
+                            <div id="currentFiles" class="mt-3">
+                                <p class="text-muted">暂无当前分割结果</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="all" role="tabpanel" aria-labelledby="all-tab">
+                            <div id="allFiles" class="mt-3">
+                                <p class="text-muted">点击"刷新"按钮加载所有输出文件</p>
+                                <button type="button" class="btn btn-outline-primary" id="refreshFilesBtn">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>刷新
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast 通知容器 -->
+    <div class="toast-container">
+        <div id="notificationToast" class="toast custom-toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                <strong class="me-auto" id="toastTitle">通知</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                消息内容
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 全局变量
+        let currentFile = null;
+        let currentSplitDir = null;
+        let outputFormats = {{ output_formats | tojson }};
+        let supportedFormats = {{ supported_formats | tojson }};
+        
+        // 设置目标大小值 - 全局函数，确保可以从HTML的onclick事件中调用
+        function setTargetSize(value, event) {
+            const targetSizeInput = document.getElementById('targetSize');
+            targetSizeInput.value = value;
+            
+            // 触发input事件以确保UI更新
+            const inputEvent = new Event('input', { bubbles: true });
+            targetSizeInput.dispatchEvent(inputEvent);
+            
+            // 验证并更新目标大小，但不触发表单提交
+            validateAndUpdateTargetSize(value);
+            
+            // 阻止任何可能的表单提交
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            hideTargetSizeHint();
+            
+            // 确保不会触发表单提交
+            return false;
+        }
+        
+        // 验证并更新目标大小 - 全局函数
+        function validateAndUpdateTargetSize(value) {
+            const targetSizeInput = document.getElementById('targetSize');
+            const fileCountEstimate = document.getElementById('fileCountEstimate');
+            const estimatedCount = document.getElementById('estimatedCount');
+            
+            // 验证输入值
+            const parsedValue = parseFloat(value);
+            
+            if (isNaN(parsedValue) || parsedValue <= 0) {
+                // 输入无效，显示错误样式
+                targetSizeInput.classList.add('is-invalid');
+                targetSizeInput.classList.remove('is-valid');
+                fileCountEstimate.style.display = 'none';
+                return;
+            }
+            
+            // 检查是否超过文件大小
+            if (currentFile && parsedValue > currentFile.file_size_mb) {
+                // 目标大小大于文件大小，不显示警告，只标记为无效
+                targetSizeInput.classList.add('is-invalid');
+                targetSizeInput.classList.remove('is-valid');
+                
+                // 不显示文件数量估算
+                fileCountEstimate.style.display = 'none';
+                return;
+            }
+            
+            // 输入有效
+            targetSizeInput.classList.remove('is-invalid');
+            targetSizeInput.classList.add('is-valid');
+            
+            // 更新文件数量估算
+            updateFileCountEstimate();
+        }
+        
+        // 显示目标大小智能提示 - 全局函数
+        function showTargetSizeHint() {
+            const targetSizeInput = document.getElementById('targetSize');
+            const inputGroup = targetSizeInput.parentElement;
+            
+            // 如果已存在提示框，则不重复创建
+            if (document.getElementById('targetSizeHint')) {
+                return;
+            }
+            
+            // 创建提示框
+            const hintDiv = document.createElement('div');
+            hintDiv.id = 'targetSizeHint';
+            hintDiv.className = 'position-absolute bg-white border rounded shadow p-2 mt-1';
+            hintDiv.style.zIndex = '10';
+            hintDiv.style.width = '100%';
+            hintDiv.style.fontSize = '0.875rem';
+            
+            // 根据当前文件类型和大小生成提示内容
+            let hintContent = '';
+            
+            if (currentFile) {
+                const fileSize = parseFloat(currentFile.file_size_mb);
+                const fileType = currentFile.file_type;
+                
+                // 根据文件类型提供不同的建议
+                if (fileType === 'document') {
+                    // 文档文件的特殊建议
+                    hintContent += `<div class="mb-1">• 当前文件大小: ${fileSize.toFixed(2)} MB</div>`;
+                    
+                    // 提供几个预设选项
+                    const suggestions = [
+                        { size: 1, desc: '1 MB' },
+                        { size: 3, desc: '3 MB' },
+                        { size: 5, desc: '5 MB' },
+                        { size: 10, desc: '10 MB' },
+                        { size: 20, desc: '20 MB' },
+                        { size: 30, desc: '30 MB' },
+                        { size: 50, desc: '50 MB' },
+                        { size: 100, desc: '100 MB' },
+                        { size: 200, desc: '200 MB' }
+                    ];
+                    
+                    hintContent += '<div class="mb-2"><strong>快速选择：</strong></div>';
+                    suggestions.forEach(suggestion => {
+                        hintContent += `<button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="return setTargetSize(${suggestion.size}, event)">${suggestion.desc}</button>`;
+                    });
+                } else {
+                    // 其他文件类型的建议
+                    hintContent += `<div class="mb-1">• 当前文件大小: ${fileSize.toFixed(2)} MB</div>`;
+                    
+                    // 提供几个预设选项
+                    const suggestions = [
+                        { size: 1, desc: '1 MB' },
+                        { size: 3, desc: '3 MB' },
+                        { size: 5, desc: '5 MB' },
+                        { size: 10, desc: '10 MB' },
+                        { size: 20, desc: '20 MB' },
+                        { size: 30, desc: '30 MB' },
+                        { size: 50, desc: '50 MB' },
+                        { size: 100, desc: '100 MB' },
+                        { size: 200, desc: '200 MB' }
+                    ];
+                    
+                    hintContent += '<div class="mb-2"><strong>快速选择：</strong></div>';
+                    suggestions.forEach(suggestion => {
+                        hintContent += `<button type="button" class="btn btn-sm btn-outline-primary me-1 mb-1" onclick="return setTargetSize(${suggestion.size}, event)">${suggestion.desc}</button>`;
+                    });
+                }
+            } else {
+                hintContent += '<div class="mb-1">• 请先选择文件</div>';
+            }
+            
+            hintDiv.innerHTML = hintContent;
+            
+            // 将提示框添加到输入框后面
+            inputGroup.style.position = 'relative';
+            inputGroup.appendChild(hintDiv);
+        }
+        
+        // 隐藏目标大小智能提示 - 全局函数
+        function hideTargetSizeHint() {
+            const hintDiv = document.getElementById('targetSizeHint');
+            if (hintDiv) {
+                hintDiv.remove();
+            }
+        }
+        
+        // 更新文件数量估算 - 全局函数
+        function updateFileCountEstimate() {
+            // 不显示文件数量估算，直接返回
+            return;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // DOM元素
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileType = document.getElementById('fileType');
+            const fileIcon = document.getElementById('fileIcon');
+            const clearFileBtn = document.getElementById('clearFileBtn');
+            const toggleUploadedFilesBtn = document.getElementById('toggleUploadedFilesBtn');
+            const uploadedFilesSection = document.getElementById('uploadedFilesSection');
+            const refreshUploadedFilesBtn = document.getElementById('refreshUploadedFilesBtn');
+            const uploadedFilesList = document.getElementById('uploadedFilesList');
+            const splitSettings = document.getElementById('splitSettings');
+            const splitForm = document.getElementById('splitForm');
+            const splitBtn = document.getElementById('splitBtn');
+            const splitResults = document.getElementById('splitResults');
+            const outputFiles = document.getElementById('outputFiles');
+            const deleteAllBtn = document.getElementById('deleteAllBtn');
+            const refreshFilesBtn = document.getElementById('refreshFilesBtn');
+            const currentFiles = document.getElementById('currentFiles');
+            const allFiles = document.getElementById('allFiles');
+            
+            // 初始化格式选项
+            initializeFormatOptions();
+            
+            // 文件拖放处理
+            dropZone.addEventListener('click', () => fileInput.click());
+            
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+            
+            // 清除文件按钮
+            clearFileBtn.addEventListener('click', () => {
+                clearCurrentFile();
+            });
+            
+            // 分割表单提交
+            splitForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                performSplit();
+            });
+            
+            // 删除所有文件按钮
+            deleteAllBtn.addEventListener('click', () => {
+                if (currentSplitDir && confirm('确定要删除所有分割结果吗？')) {
+                    deleteAllFiles();
+                }
+            });
+            
+            // 刷新文件列表按钮
+            refreshFilesBtn.addEventListener('click', () => {
+                loadAllFiles();
+            });
+            
+            // 清除文件按钮
+            clearFileBtn.addEventListener('click', () => {
+                clearCurrentFile();
+            });
+            
+            // 切换已上传文件列表显示
+            toggleUploadedFilesBtn.addEventListener('click', () => {
+                const isVisible = uploadedFilesSection.style.display !== 'none';
+                uploadedFilesSection.style.display = isVisible ? 'none' : 'block';
+                
+                // 如果显示列表，则加载文件
+                if (!isVisible) {
+                    loadUploadedFiles();
+                }
+            });
+            
+            // 刷新已上传文件列表按钮
+            refreshUploadedFilesBtn.addEventListener('click', () => {
+                loadUploadedFiles();
+            });
+            
+            // 初始化格式选项
+            function initializeFormatOptions() {
+                // 视频格式选项 - 使用表格布局实现紧凑排列
+                const videoFormatsDiv = document.getElementById('videoFormats');
+                const videoTable = document.createElement('table');
+                videoTable.style.width = '100%';
+                videoTable.style.borderCollapse = 'collapse';
+                videoTable.style.margin = '0';
+                videoTable.style.padding = '0';
+                videoFormatsDiv.appendChild(videoTable);
+                
+                outputFormats.video.forEach(format => {
+                    const row = document.createElement('tr');
+                    
+                    // 左列：小写格式选项
+                    const tdLower = document.createElement('td');
+                    tdLower.style.width = '50%';
+                    tdLower.style.padding = '2px 5px';
+                    tdLower.style.verticalAlign = 'middle';
+                    tdLower.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="videoFormatOption" id="video_${format}" value="${format}">
+                            <label class="form-check-label" for="video_${format}" style="margin-left: 0.25rem;">.${format}</label>
+                        </div>
+                    `;
+                    
+                    // 右列：大写格式选项
+                    const tdUpper = document.createElement('td');
+                    tdUpper.style.width = '50%';
+                    tdUpper.style.padding = '2px 5px';
+                    tdUpper.style.verticalAlign = 'middle';
+                    tdUpper.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="videoFormatOption" id="video_${format.toUpperCase()}" value="${format.toUpperCase()}">
+                            <label class="form-check-label" for="video_${format.toUpperCase()}" style="margin-left: 0.25rem;">.${format.toUpperCase()}</label>
+                        </div>
+                    `;
+                    
+                    row.appendChild(tdLower);
+                    row.appendChild(tdUpper);
+                    videoTable.appendChild(row);
+                });
+                
+                // 音频格式选项 - 使用表格布局实现紧凑排列
+                const audioFormatsDiv = document.getElementById('audioFormats');
+                const audioTable = document.createElement('table');
+                audioTable.style.width = '100%';
+                audioTable.style.borderCollapse = 'collapse';
+                audioTable.style.margin = '0';
+                audioTable.style.padding = '0';
+                audioFormatsDiv.appendChild(audioTable);
+                
+                outputFormats.audio.forEach(format => {
+                    const row = document.createElement('tr');
+                    
+                    // 左列：小写格式选项
+                    const tdLower = document.createElement('td');
+                    tdLower.style.width = '50%';
+                    tdLower.style.padding = '2px 5px';
+                    tdLower.style.verticalAlign = 'middle';
+                    tdLower.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="audioFormatOption" id="audio_${format}" value="${format}">
+                            <label class="form-check-label" for="audio_${format}" style="margin-left: 0.25rem;">.${format}</label>
+                        </div>
+                    `;
+                    
+                    // 右列：大写格式选项
+                    const tdUpper = document.createElement('td');
+                    tdUpper.style.width = '50%';
+                    tdUpper.style.padding = '2px 5px';
+                    tdUpper.style.verticalAlign = 'middle';
+                    tdUpper.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="audioFormatOption" id="audio_${format.toUpperCase()}" value="${format.toUpperCase()}">
+                            <label class="form-check-label" for="audio_${format.toUpperCase()}" style="margin-left: 0.25rem;">.${format.toUpperCase()}</label>
+                        </div>
+                    `;
+                    
+                    row.appendChild(tdLower);
+                    row.appendChild(tdUpper);
+                    audioTable.appendChild(row);
+                });
+                
+                // 图片格式选项 - 使用表格布局实现紧凑排列
+                const imageFormatsDiv = document.getElementById('imageFormats');
+                const imageTable = document.createElement('table');
+                imageTable.style.width = '100%';
+                imageTable.style.borderCollapse = 'collapse';
+                imageTable.style.margin = '0';
+                imageTable.style.padding = '0';
+                imageFormatsDiv.appendChild(imageTable);
+                
+                outputFormats.image.forEach(format => {
+                    const row = document.createElement('tr');
+                    
+                    // 左列：小写格式选项
+                    const tdLower = document.createElement('td');
+                    tdLower.style.width = '50%';
+                    tdLower.style.padding = '2px 5px';
+                    tdLower.style.verticalAlign = 'middle';
+                    tdLower.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="imageFormatOption" id="image_${format}" value="${format}">
+                            <label class="form-check-label" for="image_${format}" style="margin-left: 0.25rem;">.${format}</label>
+                        </div>
+                    `;
+                    
+                    // 右列：大写格式选项
+                    const tdUpper = document.createElement('td');
+                    tdUpper.style.width = '50%';
+                    tdUpper.style.padding = '2px 5px';
+                    tdUpper.style.verticalAlign = 'middle';
+                    tdUpper.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="imageFormatOption" id="image_${format.toUpperCase()}" value="${format.toUpperCase()}">
+                            <label class="form-check-label" for="image_${format.toUpperCase()}" style="margin-left: 0.25rem;">.${format.toUpperCase()}</label>
+                        </div>
+                    `;
+                    
+                    row.appendChild(tdLower);
+                    row.appendChild(tdUpper);
+                    imageTable.appendChild(row);
+                });
+                
+                // 文档格式选项 - 使用表格布局实现紧凑排列
+                const documentFormatsDiv = document.getElementById('documentFormats');
+                const documentTable = document.createElement('table');
+                documentTable.style.width = '100%';
+                documentTable.style.borderCollapse = 'collapse';
+                documentTable.style.margin = '0';
+                documentTable.style.padding = '0';
+                documentFormatsDiv.appendChild(documentTable);
+                
+                outputFormats.document.forEach(format => {
+                    const row = document.createElement('tr');
+                    
+                    // 左列：小写格式选项
+                    const tdLower = document.createElement('td');
+                    tdLower.style.width = '50%';
+                    tdLower.style.padding = '2px 5px';
+                    tdLower.style.verticalAlign = 'middle';
+                    tdLower.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="documentFormatOption" id="document_${format}" value="${format}">
+                            <label class="form-check-label" for="document_${format}" style="margin-left: 0.25rem;">.${format}</label>
+                        </div>
+                    `;
+                    
+                    // 右列：大写格式选项
+                    const tdUpper = document.createElement('td');
+                    tdUpper.style.width = '50%';
+                    tdUpper.style.padding = '2px 5px';
+                    tdUpper.style.verticalAlign = 'middle';
+                    tdUpper.innerHTML = `
+                        <div class="form-check" style="margin-bottom: 0; padding-left: 1.2rem;">
+                            <input class="form-check-input" type="radio" name="documentFormatOption" id="document_${format.toUpperCase()}" value="${format.toUpperCase()}">
+                            <label class="form-check-label" for="document_${format.toUpperCase()}" style="margin-left: 0.25rem;">.${format.toUpperCase()}</label>
+                        </div>
+                    `;
+                    
+                    row.appendChild(tdLower);
+                    row.appendChild(tdUpper);
+                    documentTable.appendChild(row);
+                });
+                
+                // 默认选中第一个视频格式（小写）
+                document.getElementById('videoFormat').checked = true;
+                if (outputFormats.video.length > 0) {
+                    document.getElementById(`video_${outputFormats.video[0]}`).checked = true;
+                }
+                
+                // 添加目标大小输入框的事件监听器，实现实时验证和智能提示
+                const targetSizeInput = document.getElementById('targetSize');
+                targetSizeInput.addEventListener('input', function() {
+                    validateAndUpdateTargetSize(this.value);
+                });
+                
+                // 添加目标大小输入框的焦点事件，显示智能提示
+                targetSizeInput.addEventListener('focus', function() {
+                    showTargetSizeHint();
+                });
+                
+                // 添加目标大小输入框的失焦事件，隐藏智能提示
+                targetSizeInput.addEventListener('blur', function() {
+                    setTimeout(() => {
+                        hideTargetSizeHint();
+                    }, 200);
+                });
+            }
+            
+            // 处理文件选择
+            function handleFile(file, isUploaded = false) {
+                let fileCategory = null;
+                
+                // 如果是已上传文件，直接使用传入的文件类型
+                if (isUploaded && file.type) {
+                    fileCategory = file.type;
+                } else {
+                    // 检查文件类型
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    for (const [category, formats] of Object.entries(supportedFormats)) {
+                        if (formats.includes(ext)) {
+                            fileCategory = category;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!fileCategory) {
+                    showToast('错误', '不支持的文件格式', 'danger');
+                    return;
+                }
+                
+                // 显示文件信息
+                fileName.textContent = file.name;
+                fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2);
+                fileType.textContent = fileCategory;
+                
+                // 设置文件图标
+                let iconClass = 'bi-file-earmark';
+                if (fileCategory === 'video') {
+                    iconClass = 'bi-file-earmark-play';
+                } else if (fileCategory === 'audio') {
+                    iconClass = 'bi-file-earmark-music';
+                } else if (fileCategory === 'image') {
+                    iconClass = 'bi-file-earmark-image';
+                } else if (fileCategory === 'document') {
+                    iconClass = 'bi-file-earmark-text';
+                }
+                fileIcon.innerHTML = `<i class="bi ${iconClass}"></i>`;
+                
+                // 如果是已上传文件，直接设置当前文件信息
+                if (isUploaded) {
+                    currentFile = {
+                        file_path: file.path,
+                        file_name: file.name,
+                        file_size_mb: (file.size / (1024 * 1024)).toFixed(2),
+                        file_type: fileCategory
+                    };
+                    fileInfo.style.display = 'block';
+                    splitSettings.style.display = 'block';
+                    
+                    // 根据文件类型设置默认格式选项
+                    setDefaultFormatOptions(fileCategory);
+                    
+                    // 设置目标大小默认值为文件大小的10%
+                    const targetSizeInput = document.getElementById('targetSize');
+                    targetSizeInput.value = Math.max(1, Math.floor((file.size / (1024 * 1024)) * 0.1));
+                } else {
+                    // 上传文件
+                    uploadFile(file);
+                }
+            }
+            
+            // 清除当前选择的文件
+            function clearCurrentFile() {
+                currentFile = null;
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                splitSettings.style.display = 'none';
+                splitResults.style.display = 'none';
+                
+                // 隐藏文档分割提示
+                const documentSplitInfo = document.getElementById('documentSplitInfo');
+                if (documentSplitInfo) {
+                    documentSplitInfo.style.display = 'none';
+                }
+                
+                // 重置所有格式选项为可用状态
+                const videoFormatRadio = document.getElementById('videoFormat');
+                const audioFormatRadio = document.getElementById('audioFormat');
+                const imageFormatRadio = document.getElementById('imageFormat');
+                const documentFormatRadio = document.getElementById('documentFormat');
+                
+                const videoFormatsDiv = document.getElementById('videoFormats');
+                const audioFormatsDiv = document.getElementById('audioFormats');
+                const imageFormatsDiv = document.getElementById('imageFormats');
+                const documentFormatsDiv = document.getElementById('documentFormats');
+                
+                // 重置所有单选按钮状态
+                if (videoFormatRadio) videoFormatRadio.checked = false;
+                if (audioFormatRadio) audioFormatRadio.checked = false;
+                if (imageFormatRadio) imageFormatRadio.checked = false;
+                if (documentFormatRadio) documentFormatRadio.checked = false;
+                
+                // 启用所有格式选项
+                if (videoFormatRadio) videoFormatRadio.disabled = false;
+                if (audioFormatRadio) audioFormatRadio.disabled = false;
+                if (imageFormatRadio) imageFormatRadio.disabled = false;
+                if (documentFormatRadio) documentFormatRadio.disabled = false;
+                
+                // 恢复所有格式选项的样式
+                if (videoFormatsDiv) {
+                    videoFormatsDiv.style.opacity = '1';
+                    videoFormatsDiv.style.pointerEvents = 'auto';
+                }
+                if (audioFormatsDiv) {
+                    audioFormatsDiv.style.opacity = '1';
+                    audioFormatsDiv.style.pointerEvents = 'auto';
+                }
+                if (imageFormatsDiv) {
+                    imageFormatsDiv.style.opacity = '1';
+                    imageFormatsDiv.style.pointerEvents = 'auto';
+                }
+                if (documentFormatsDiv) {
+                    documentFormatsDiv.style.opacity = '1';
+                    documentFormatsDiv.style.pointerEvents = 'auto';
+                }
+                
+                // 恢复默认选中视频格式
+                if (videoFormatRadio) videoFormatRadio.checked = true;
+                if (outputFormats && outputFormats.video && outputFormats.video.length > 0) {
+                    const firstVideoOption = document.getElementById(`video_${outputFormats.video[0]}`);
+                    if (firstVideoOption) firstVideoOption.checked = true;
+                }
+            }
+            
+            // 上传文件
+            function uploadFile(file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    // 检查响应是否为JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('服务器返回了非JSON响应，可能发生了服务器错误');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        currentFile = data;
+                        fileInfo.style.display = 'block';
+                        splitSettings.style.display = 'block';
+                        
+                        // 根据文件类型设置默认格式选项
+                        setDefaultFormatOptions(data.file_type);
+                        
+                        // 设置目标大小默认值为文件大小的10%
+                        const targetSizeInput = document.getElementById('targetSize');
+                        targetSizeInput.value = Math.max(1, Math.floor(data.file_size_mb * 0.1));
+                        
+                        // 更新文件分割数量估算
+                        updateFileCountEstimate();
+                        
+                        showToast('成功', '文件上传成功', 'success');
+                    } else {
+                        showToast('错误', data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showToast('错误', '上传失败: ' + error.message, 'danger');
+                });
+            }
+            
+            // 更新文件分割数量估算
+            function updateFileCountEstimate() {
+                // 不显示文件数量估算，直接返回
+                return;
+            }
+            
+            // 根据文件类型设置默认格式选项
+            function setDefaultFormatOptions(fileType) {
+                // 获取所有格式类型的单选按钮和选项
+                const videoFormatRadio = document.getElementById('videoFormat');
+                const audioFormatRadio = document.getElementById('audioFormat');
+                const imageFormatRadio = document.getElementById('imageFormat');
+                const documentFormatRadio = document.getElementById('documentFormat');
+                
+                // 获取所有格式选项的容器
+                const videoFormatsDiv = document.getElementById('videoFormats');
+                const audioFormatsDiv = document.getElementById('audioFormats');
+                const imageFormatsDiv = document.getElementById('imageFormats');
+                const documentFormatsDiv = document.getElementById('documentFormats');
+                
+                // 重置所有选项
+                if (videoFormatRadio) videoFormatRadio.checked = false;
+                if (audioFormatRadio) audioFormatRadio.checked = false;
+                if (imageFormatRadio) imageFormatRadio.checked = false;
+                if (documentFormatRadio) documentFormatRadio.checked = false;
+                
+                // 根据文件类型设置默认选项并启用/禁用其他选项
+                if (fileType === 'video') {
+                    // 启用视频格式选项
+                    if (videoFormatRadio) {
+                        videoFormatRadio.checked = true;
+                        videoFormatRadio.disabled = false;
+                    }
+                    if (videoFormatsDiv) {
+                        videoFormatsDiv.style.opacity = '1';
+                        videoFormatsDiv.style.pointerEvents = 'auto';
+                    }
+                    
+                    // 禁用音频格式选项
+                    if (audioFormatRadio) {
+                        audioFormatRadio.checked = false;
+                        audioFormatRadio.disabled = true;
+                    }
+                    if (audioFormatsDiv) {
+                        audioFormatsDiv.style.opacity = '0.5';
+                        audioFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 禁用图片格式选项
+                    if (imageFormatRadio) {
+                        imageFormatRadio.checked = false;
+                        imageFormatRadio.disabled = true;
+                    }
+                    if (imageFormatsDiv) {
+                        imageFormatsDiv.style.opacity = '0.5';
+                        imageFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 禁用文档格式选项
+                    if (documentFormatRadio) {
+                        documentFormatRadio.checked = false;
+                        documentFormatRadio.disabled = true;
+                    }
+                    if (documentFormatsDiv) {
+                        documentFormatsDiv.style.opacity = '0.5';
+                        documentFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 选中第一个视频格式
+                    if (outputFormats.video && outputFormats.video.length > 0) {
+                        const firstVideoFormat = document.getElementById(`video_${outputFormats.video[0]}`);
+                        if (firstVideoFormat) {
+                            firstVideoFormat.checked = true;
+                        }
+                    }
+                    
+                    // 隐藏文档分割提示
+                    const documentSplitInfo = document.getElementById('documentSplitInfo');
+                    if (documentSplitInfo) documentSplitInfo.style.display = 'none';
+                } else if (fileType === 'audio') {
+                    // 禁用视频格式选项
+                    if (videoFormatRadio) {
+                        videoFormatRadio.checked = false;
+                        videoFormatRadio.disabled = true;
+                    }
+                    if (videoFormatsDiv) {
+                        videoFormatsDiv.style.opacity = '0.5';
+                        videoFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 启用音频格式选项
+                    if (audioFormatRadio) {
+                        audioFormatRadio.checked = true;
+                        audioFormatRadio.disabled = false;
+                    }
+                    if (audioFormatsDiv) {
+                        audioFormatsDiv.style.opacity = '1';
+                        audioFormatsDiv.style.pointerEvents = 'auto';
+                    }
+                    
+                    // 禁用图片格式选项
+                    if (imageFormatRadio) {
+                        imageFormatRadio.checked = false;
+                        imageFormatRadio.disabled = true;
+                    }
+                    if (imageFormatsDiv) {
+                        imageFormatsDiv.style.opacity = '0.5';
+                        imageFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 禁用文档格式选项
+                    if (documentFormatRadio) {
+                        documentFormatRadio.checked = false;
+                        documentFormatRadio.disabled = true;
+                    }
+                    if (documentFormatsDiv) {
+                        documentFormatsDiv.style.opacity = '0.5';
+                        documentFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 选中第一个音频格式
+                    if (outputFormats.audio && outputFormats.audio.length > 0) {
+                        const firstAudioFormat = document.getElementById(`audio_${outputFormats.audio[0]}`);
+                        if (firstAudioFormat) {
+                            firstAudioFormat.checked = true;
+                        }
+                    }
+                    
+                    // 隐藏文档分割提示
+                    const documentSplitInfo = document.getElementById('documentSplitInfo');
+                    if (documentSplitInfo) documentSplitInfo.style.display = 'none';
+                } else if (fileType === 'image') {
+                    // 禁用视频格式选项
+                    if (videoFormatRadio) {
+                        videoFormatRadio.checked = false;
+                        videoFormatRadio.disabled = true;
+                    }
+                    if (videoFormatsDiv) {
+                        videoFormatsDiv.style.opacity = '0.5';
+                        videoFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 禁用音频格式选项
+                    if (audioFormatRadio) {
+                        audioFormatRadio.checked = false;
+                        audioFormatRadio.disabled = true;
+                    }
+                    if (audioFormatsDiv) {
+                        audioFormatsDiv.style.opacity = '0.5';
+                        audioFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 启用图片格式选项
+                    if (imageFormatRadio) {
+                        imageFormatRadio.checked = true;
+                        imageFormatRadio.disabled = false;
+                    }
+                    if (imageFormatsDiv) {
+                        imageFormatsDiv.style.opacity = '1';
+                        imageFormatsDiv.style.pointerEvents = 'auto';
+                    }
+                    
+                    // 禁用文档格式选项
+                    if (documentFormatRadio) {
+                        documentFormatRadio.checked = false;
+                        documentFormatRadio.disabled = true;
+                    }
+                    if (documentFormatsDiv) {
+                        documentFormatsDiv.style.opacity = '0.5';
+                        documentFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 选中第一个图片格式
+                    if (outputFormats.image && outputFormats.image.length > 0) {
+                        const firstImageFormat = document.getElementById(`image_${outputFormats.image[0]}`);
+                        if (firstImageFormat) {
+                            firstImageFormat.checked = true;
+                        }
+                    }
+                    
+                    // 隐藏文档分割提示
+                    const documentSplitInfo = document.getElementById('documentSplitInfo');
+                    if (documentSplitInfo) documentSplitInfo.style.display = 'none';
+                } else if (fileType === 'document') {
+                    // 禁用视频格式选项
+                    if (videoFormatRadio) {
+                        videoFormatRadio.checked = false;
+                        videoFormatRadio.disabled = true;
+                    }
+                    if (videoFormatsDiv) {
+                        videoFormatsDiv.style.opacity = '0.5';
+                        videoFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 禁用音频格式选项
+                    if (audioFormatRadio) {
+                        audioFormatRadio.checked = false;
+                        audioFormatRadio.disabled = true;
+                    }
+                    if (audioFormatsDiv) {
+                        audioFormatsDiv.style.opacity = '0.5';
+                        audioFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 禁用图片格式选项
+                    if (imageFormatRadio) {
+                        imageFormatRadio.checked = false;
+                        imageFormatRadio.disabled = true;
+                    }
+                    if (imageFormatsDiv) {
+                        imageFormatsDiv.style.opacity = '0.5';
+                        imageFormatsDiv.style.pointerEvents = 'none';
+                    }
+                    
+                    // 启用文档格式选项
+                    if (documentFormatRadio) {
+                        documentFormatRadio.checked = true;
+                        documentFormatRadio.disabled = false;
+                    }
+                    if (documentFormatsDiv) {
+                        documentFormatsDiv.style.opacity = '1';
+                        documentFormatsDiv.style.pointerEvents = 'auto';
+                    }
+                    
+                    // 选中第一个文档格式
+                    if (outputFormats.document && outputFormats.document.length > 0) {
+                        const firstDocumentFormat = document.getElementById(`document_${outputFormats.document[0]}`);
+                        if (firstDocumentFormat) {
+                            firstDocumentFormat.checked = true;
+                        }
+                    }
+                    
+                    // 显示文档分割提示
+                    const documentSplitInfo = document.getElementById('documentSplitInfo');
+                    if (documentSplitInfo) documentSplitInfo.style.display = 'block';
+                } else {
+                    // 隐藏文档分割提示
+                    const documentSplitInfo = document.getElementById('documentSplitInfo');
+                    if (documentSplitInfo) documentSplitInfo.style.display = 'none';
+                }
+            }
+            
+            // 执行分割
+    function performSplit() {
+        if (!currentFile) {
+            showToast('错误', '请先选择文件', 'danger');
+            return;
+        }
+        
+        // 获取目标大小
+        const targetSize = parseFloat(document.getElementById('targetSize').value);
+        if (isNaN(targetSize) || targetSize <= 0) {
+            showToast('错误', '请输入有效的目标大小', 'danger');
+            return;
+        }
+        
+        // 检查目标大小是否大于文件大小
+        if (targetSize > currentFile.file_size_mb) {
+            // 不显示警告，直接继续处理
+        }
+        
+        // 获取输出格式
+        let outputFormat = '';
+        const formatType = document.querySelector('input[name="formatType"]:checked');
+        
+        if (formatType) {
+            if (formatType.value === 'video') {
+                const videoFormat = document.querySelector('input[name="videoFormatOption"]:checked');
+                outputFormat = videoFormat ? videoFormat.value : '';
+            } else if (formatType.value === 'audio') {
+                const audioFormat = document.querySelector('input[name="audioFormatOption"]:checked');
+                outputFormat = audioFormat ? audioFormat.value : '';
+            } else if (formatType.value === 'image') {
+                const imageFormat = document.querySelector('input[name="imageFormatOption"]:checked');
+                outputFormat = imageFormat ? imageFormat.value : '';
+            } else if (formatType.value === 'document') {
+                const documentFormat = document.querySelector('input[name="documentFormatOption"]:checked');
+                outputFormat = documentFormat ? documentFormat.value : '';
+            }
+        }
+        
+        if (!outputFormat) {
+            showToast('错误', '请选择输出格式', 'danger');
+            return;
+        }
+        
+        // 计算预计分割文件数量
+        const estimatedFiles = Math.ceil(currentFile.file_size_mb / targetSize);
+        
+        // 如果是文档文件且分割数量较多，显示确认对话框
+        if (currentFile.file_type === 'document' && estimatedFiles > 10) {
+            if (!confirm(`文档将被分割为 ${estimatedFiles} 个文件，这可能需要较长时间。是否继续？`)) {
+                return;
+            }
+        }
+        
+        // 显示加载状态
+        splitBtn.disabled = true;
+        splitBtn.querySelector('.spinner-border').style.display = 'inline-block';
+        
+        // 显示进度提示
+        showToast('处理中', `正在分割文件，预计生成 ${estimatedFiles} 个文件，请稍候...`, 'info');
+        
+        // 创建FormData对象以支持文件上传
+        const formData = new FormData();
+        
+        // 如果是已上传的文件，使用文件路径
+        if (currentFile.file_path) {
+            formData.append('uploaded_file_path', currentFile.file_path);
+            formData.append('file_name', currentFile.file_name);
+        } else {
+            // 新上传的文件
+            formData.append('file', currentFile.file);
+        }
+        
+        formData.append('target_size_mb', targetSize);
+        formData.append('output_format', outputFormat);
+        
+        // 发送分割请求
+                fetch('/perform_split', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            // 检查响应是否为JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('服务器返回了非JSON响应，可能发生了服务器错误');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // 隐藏加载状态
+            splitBtn.disabled = false;
+            splitBtn.querySelector('.spinner-border').style.display = 'none';
+            
+            if (data.success) {
+                currentSplitDir = data.split_dir;
+                displaySplitResults(data.files);
+                
+                // 根据分割文件数量显示不同的成功消息
+                if (data.files.length === 1) {
+                    showToast('完成', '文件分割完成，生成了1个文件', 'success');
+                } else {
+                    showToast('完成', `文件分割完成，成功生成了 ${data.files.length} 个文件`, 'success');
+                }
+                
+                // 如果是文档文件，显示特殊提示
+                if (currentFile.file_type === 'document' && data.files.length > 1) {
+                    setTimeout(() => {
+                        showToast('提示', '文档已按章节或页数智能分割，请检查分割结果', 'info');
+                    }, 2000);
+                }
+            } else {
+                // 根据错误类型显示不同的错误消息
+                let errorMessage = data.message;
+                    if (data.message && data.message.includes('memory')) {
+                    errorMessage = '内存不足，请尝试增大目标大小以减少分割文件数量';
+                } else if (data.message && data.message.includes('timeout')) {
+                    errorMessage = '处理超时，请尝试增大目标大小或选择较小的文件';
+                } else if (data.message && data.message.includes('format')) {
+                    errorMessage = '格式不支持，请选择其他输出格式';
+                }
+                
+                showToast('错误', errorMessage, 'danger');
+            }
+        })
+        .catch(error => {
+            // 隐藏加载状态
+            splitBtn.disabled = false;
+            splitBtn.querySelector('.spinner-border').style.display = 'none';
+            
+            // 根据错误类型显示不同的错误消息
+            let errorMessage = error.message;
+            if (error.message.includes('fetch')) {
+                errorMessage = '网络连接失败，请检查网络连接后重试';
+            } else if (error.message.includes('JSON')) {
+                errorMessage = '服务器响应异常，请稍后重试';
+            }
+            
+            showToast('错误', '分割失败: ' + errorMessage, 'danger');
+        });
+    }
+            
+            // 显示分割结果
+            function displaySplitResults(files) {
+                outputFiles.innerHTML = '';
+                currentFiles.innerHTML = '';
+                
+                files.forEach((file, index) => {
+                    const isPrimaryFile = index === 0; // 第一个文件是主要文件
+                    let badgeHtml = '';
+                    let fileDescription = '';
+                    
+                    // 根据文件类型和索引设置不同的徽章和描述
+                    if (currentFile && currentFile.file_type === 'document') {
+                        // 文档文件的特殊处理
+                        if (isPrimaryFile) {
+                            badgeHtml = '<span class="badge bg-primary">第一部分</span>';
+                            fileDescription = '文档的开始部分';
+                        } else if (index === files.length - 1) {
+                            badgeHtml = '<span class="badge bg-success">最后部分</span>';
+                            fileDescription = '文档的结尾部分';
+                        } else {
+                            badgeHtml = `<span class="badge bg-info">第${index + 1}部分</span>`;
+                            fileDescription = `文档的中间部分`;
+                        }
+                    } else {
+                        // 其他文件类型的处理
+                        if (isPrimaryFile) {
+                            badgeHtml = '<span class="badge bg-primary">主文件</span>';
+                            fileDescription = '文件的主要部分';
+                        } else {
+                            badgeHtml = '<span class="badge bg-secondary">剩余部分</span>';
+                            fileDescription = '文件的剩余部分';
+                        }
+                    }
+                    
+                    // 创建文件项
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'output-file';
+                    fileItem.innerHTML = `
+                        <div class="file-item">
+                            <div class="file-icon">
+                                <i class="bi ${getFileIcon(file.type)}"></i>
+                            </div>
+                            <div class="file-details">
+                                <h6>${file.name} ${badgeHtml}</h6>
+                                <p class="mb-0">${fileDescription}</p>
+                                <p class="mb-0 text-muted">大小: ${file.size_mb} MB | 类型: ${file.type}</p>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button type="button" class="btn btn-sm btn-outline-primary download-btn me-1" data-path="${file.path}" data-name="${file.name}">
+                                <i class="bi bi-download me-1"></i>下载
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-path="${file.path}">
+                                <i class="bi bi-trash me-1"></i>删除
+                            </button>
+                        </div>
+                    `;
+                    
+                    outputFiles.appendChild(fileItem);
+                    
+                    // 克隆到当前文件列表
+                    const clone = fileItem.cloneNode(true);
+                    currentFiles.appendChild(clone);
+                });
+                
+                // 显示结果区域
+                splitResults.style.display = 'block';
+                
+                // 如果是文档文件，添加特殊提示
+                if (currentFile && currentFile.file_type === 'document' && files.length > 1) {
+                    const documentTip = document.createElement('div');
+                    documentTip.className = 'alert alert-info mt-3';
+                    documentTip.innerHTML = `
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>文档分割提示：</strong>文档已按章节或页数智能分割为 ${files.length} 个部分。
+                        建议按照顺序阅读：第一部分 → 中间部分 → 最后部分。
+                    `;
+                    outputFiles.appendChild(documentTip);
+                }
+                
+                // 添加事件监听器
+                addFileActionListeners();
+            }
+            
+            // 添加文件操作事件监听器
+            function addFileActionListeners() {
+                // 删除按钮
+                document.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const path = this.getAttribute('data-path');
+                        if (confirm('确定要删除此文件吗？')) {
+                            deleteFile(path, this.closest('.output-file'));
+                        }
+                    });
+                });
+                
+                // 下载按钮
+                document.querySelectorAll('.download-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const path = this.getAttribute('data-path');
+                        const name = this.getAttribute('data-name');
+                        downloadFile(path, name);
+                    });
+                });
+            }
+            
+            // 下载文件
+            function downloadFile(filePath, fileName) {
+                // 创建一个隐藏的表单来提交下载请求
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/download';
+                form.style.display = 'none';
+                
+                // 添加文件路径参数
+                const pathInput = document.createElement('input');
+                pathInput.type = 'hidden';
+                pathInput.name = 'file_path';
+                pathInput.value = filePath;
+                
+                form.appendChild(pathInput);
+                document.body.appendChild(form);
+                
+                // 提交表单
+                form.submit();
+                
+                // 移除表单
+                document.body.removeChild(form);
+                
+                // 显示下载提示
+                showToast('下载中', `正在下载 ${fileName}，请稍候...`, 'info');
+            }
+            
+            // 删除文件
+            function deleteFile(filePath, fileElement) {
+                fetch('/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        file_path: filePath
+                    })
+                })
+                .then(response => {
+                    // 检查响应是否为JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('服务器返回了非JSON响应，可能发生了服务器错误');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        fileElement.remove();
+                        showToast('成功', '文件已删除', 'success');
+                    } else {
+                        showToast('错误', data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showToast('错误', '删除失败: ' + error.message, 'danger');
+                });
+            }
+            
+            // 删除所有分割文件
+            function deleteAllFiles() {
+                fetch('/delete_split_dir', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        split_dir: currentSplitDir
+                    })
+                })
+                .then(response => {
+                    // 检查响应是否为JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('服务器返回了非JSON响应，可能发生了服务器错误');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        splitResults.style.display = 'none';
+                        currentFiles.innerHTML = '<p class="text-muted">暂无当前分割结果</p>';
+                        currentSplitDir = null;
+                        showToast('成功', '所有文件已删除', 'success');
+                    } else {
+                        showToast('错误', data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showToast('错误', '删除失败: ' + error.message, 'danger');
+                });
+            }
+            
+            // 加载所有输出文件
+            function loadAllFiles() {
+                refreshFilesBtn.disabled = true;
+                refreshFilesBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 加载中...';
+                
+                fetch('/list_output_files')
+                .then(response => {
+                    // 检查响应是否为JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        throw new Error('服务器返回了非JSON响应，可能发生了服务器错误');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    refreshFilesBtn.disabled = false;
+                    refreshFilesBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>刷新';
+                    
+                    if (data.success) {
+                        if (data.files.length === 0) {
+                            allFiles.innerHTML = '<p class="text-muted">暂无输出文件</p>';
+                        } else {
+                            allFiles.innerHTML = '';
+                            
+                            data.files.forEach(file => {
+                                const fileItem = document.createElement('div');
+                                fileItem.className = 'output-file';
+                                fileItem.innerHTML = `
+                                    <div class="file-item">
+                                        <div class="file-icon">
+                                            <i class="bi ${getFileIcon(file.type)}"></i>
+                                        </div>
+                                        <div class="file-details">
+                                            <h6>${file.name}</h6>
+                                            <p class="mb-0">大小: ${file.size_mb} MB | 类型: ${file.type}</p>
+                                        </div>
+                                    </div>
+                                    <div class="actions">
+                                        <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-path="${file.path}">
+                                            <i class="bi bi-trash me-1"></i>删除
+                                        </button>
+                                    </div>
+                                `;
+                                
+                                allFiles.appendChild(fileItem);
+                            });
+                            
+                            // 添加事件监听器
+                            addFileActionListeners();
+                        }
+                    } else {
+                        allFiles.innerHTML = `<p class="text-danger">加载失败: ${data.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    refreshFilesBtn.disabled = false;
+                    refreshFilesBtn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i>刷新';
+                    allFiles.innerHTML = `<p class="text-danger">加载失败: ${error.message}</p>`;
+                });
+            }
+            
+            // 清除当前选择的文件
+            function clearCurrentFile() {
+                currentFile = null;
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                splitSettings.style.display = 'none';
+                splitResults.style.display = 'none';
+            }
+            
+            // 加载已上传的文件列表
+            function loadUploadedFiles() {
+                uploadedFilesList.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div></div>';
+                
+                fetch('/list_upload_files')
+                    .then(response => {
+                        const contentType = response.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            throw new Error('服务器返回了非JSON响应');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success && data.files && data.files.length > 0) {
+                            let html = '<div class="list-group list-group-flush">';
+                            data.files.forEach(file => {
+                                const iconClass = getFileIconClass(file.type);
+                                html += `
+                                    <a href="#" class="list-group-item list-group-item-action uploaded-file-item" 
+                                       data-filename="${file.name}" data-path="${file.path}" data-size="${file.size}" data-type="${file.type}">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi ${iconClass} me-2"></i>
+                                            <div class="flex-grow-1">
+                                                <div class="fw-bold small">${file.name}</div>
+                                                <div class="text-muted small">${formatFileSize(file.size)} | ${file.type}</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                `;
+                            });
+                            html += '</div>';
+                            uploadedFilesList.innerHTML = html;
+                            
+                            // 添加点击事件
+                            document.querySelectorAll('.uploaded-file-item').forEach(item => {
+                                item.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    const filename = this.getAttribute('data-filename');
+                                    const path = this.getAttribute('data-path');
+                                    const size = this.getAttribute('data-size');
+                                    const type = this.getAttribute('data-type');
+                                    
+                                    // 创建一个模拟的文件对象
+                                    const mockFile = {
+                                        name: filename,
+                                        size: parseInt(size),
+                                        type: type,
+                                        path: path
+                                    };
+                                    
+                                    // 显示文件信息
+                                    handleFile(mockFile, true);
+                                    
+                                    // 设置当前文件信息
+                                    currentFile = {
+                                        file_path: path,
+                                        file_name: filename,
+                                        file_size_mb: (parseInt(size) / (1024 * 1024)).toFixed(2),
+                                        file_type: type
+                                    };
+                                    
+                                    // 隐藏已上传文件列表
+                                    uploadedFilesSection.style.display = 'none';
+                                });
+                            });
+                        } else {
+                            uploadedFilesList.innerHTML = '<p class="text-muted small">没有已上传的文件</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载已上传文件失败:', error);
+                        uploadedFilesList.innerHTML = '<p class="text-danger small">加载文件列表失败</p>';
+                    });
+            }
+            
+            // 根据文件类型获取图标类
+            function getFileIconClass(fileType) {
+                if (fileType.startsWith('image/')) {
+                    return 'bi-file-earmark-image';
+                } else if (fileType.startsWith('video/')) {
+                    return 'bi-file-earmark-play';
+                } else if (fileType.startsWith('audio/')) {
+                    return 'bi-file-earmark-music';
+                } else {
+                    return 'bi-file-earmark';
+                }
+            }
+            
+            // 格式化文件大小
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // 获取文件图标
+            function getFileIcon(fileType) {
+                if (fileType === 'video') {
+                    return 'bi-file-earmark-play';
+                } else if (fileType === 'audio') {
+                    return 'bi-file-earmark-music';
+                } else if (fileType === 'image') {
+                    return 'bi-file-earmark-image';
+                } else {
+                    return 'bi-file-earmark';
+                }
+            }
+            
+            // 显示Toast通知
+            function showToast(title, message, type = 'info') {
+                const toastEl = document.getElementById('notificationToast');
+                const toastTitle = document.getElementById('toastTitle');
+                const toastMessage = document.getElementById('toastMessage');
+                const toastIcon = toastEl.querySelector('.bi');
+                
+                // 设置内容
+                toastTitle.textContent = title;
+                toastMessage.textContent = message;
+                
+                // 设置图标和颜色
+                toastIcon.className = 'bi me-2';
+                if (type === 'success') {
+                    toastIcon.classList.add('bi-check-circle-fill', 'text-success');
+                } else if (type === 'danger') {
+                    toastIcon.classList.add('bi-exclamation-triangle-fill', 'text-danger');
+                } else {
+                    toastIcon.classList.add('bi-info-circle-fill', 'text-primary');
+                }
+                
+                // 显示Toast
+                const toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            }
+        });
+    </script>
+</body>
+</html>

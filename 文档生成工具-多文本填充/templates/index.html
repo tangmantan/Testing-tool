@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档生成工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .message.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .download-link {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-size: 14px;
+        }
+
+        .download-link:hover {
+            background: #218838;
+        }
+
+        .delete-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background: #dc3545;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .delete-link:hover {
+            background: #c82333;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .file-list {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .file-list h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .file-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 文档生成工具</h1>
+        
+        <form id="generateForm">
+            <div class="form-group">
+                <label for="format">文件格式：</label>
+                <select id="format" name="format" required>
+                    <option value="txt">TXT 文本文件</option>
+                    <option value="docx">DOCX Word文档</option>
+                    <option value="pdf">PDF 文档</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="size">文件大小 (MB)：</label>
+                <input type="number" id="size" name="size" min="0.1" max="100" step="0.1" value="1" required>
+                <div class="info-text">支持 0.1 - 100 MB</div>
+            </div>
+
+            <button type="submit" class="btn" id="submitBtn">
+                生成文件
+            </button>
+        </form>
+
+        <div id="message" class="message"></div>
+
+        <div class="file-list">
+            <h2>已生成的文件-存放在generated_files目录</h2>
+            <div id="fileList"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('generateForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const message = document.getElementById('message');
+        const fileList = document.getElementById('fileList');
+
+        // 加载文件列表
+        function loadFileList() {
+            fetch('/list')
+                .then(response => response.json())
+                .then(files => {
+                    if (files.length === 0) {
+                        fileList.innerHTML = '<p style="color: #666; text-align: center;">暂无文件</p>';
+                        return;
+                    }
+
+                    fileList.innerHTML = files.map(file => `
+                        <div class="file-item">
+                            <div class="file-info">
+                                <div class="file-name">${file.name}</div>
+                                <div class="file-size">${file.size}</div>
+                            </div>
+                            <div class="file-actions">
+                                <a href="${file.download_url}" class="download-link">下载</a>
+                                <button class="delete-link" data-filename="${file.name}" data-delete-url="${file.delete_url}">删除</button>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(error => {
+                    console.error('加载文件列表失败:', error);
+                });
+        }
+
+        // 显示消息
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 5000);
+        }
+
+        // 表单提交
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '生成中<span class="loading"></span>';
+
+            fetch('/generate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    message.innerHTML = `
+                        文件生成成功！<br>
+                        文件名: ${data.filename}<br>
+                        实际大小: ${data.actual_size}<br>
+                        <a href="${data.download_url}" class="download-link">立即下载</a>
+                    `;
+                    message.className = 'message success';
+                    message.style.display = 'block';
+                    
+                    // 刷新文件列表
+                    loadFileList();
+                } else {
+                    showMessage('生成失败: ' + (data.error || '未知错误'), 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('生成失败: ' + error.message, 'error');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '生成文件';
+            });
+        });
+
+        // 页面加载时加载文件列表
+        loadFileList();
+
+        // 每30秒刷新一次文件列表
+        setInterval(loadFileList, 30000);
+
+        // 添加删除文件的事件委托
+        fileList.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-link')) {
+                const filename = e.target.getAttribute('data-filename');
+                const deleteUrl = e.target.getAttribute('data-delete-url');
+                
+                if (confirm(`确定要删除文件 "${filename}" 吗？此操作不可恢复。`)) {
+                    // 禁用删除按钮，显示加载状态
+                    e.target.disabled = true;
+                    e.target.textContent = '删除中...';
+                    
+                    fetch(deleteUrl, {
+                        method: 'DELETE'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showMessage(data.message, 'success');
+                            // 刷新文件列表
+                            loadFileList();
+                        } else {
+                            showMessage('删除失败: ' + (data.error || '未知错误'), 'error');
+                            // 恢复删除按钮状态
+                            e.target.disabled = false;
+                            e.target.textContent = '删除';
+                        }
+                    })
+                    .catch(error => {
+                        showMessage('删除失败: ' + error.message, 'error');
+                        // 恢复删除按钮状态
+                        e.target.disabled = false;
+                        e.target.textContent = '删除';
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

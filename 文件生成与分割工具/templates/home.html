@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件工具 - 首页</title>
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        /* 头部样式 */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .app-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #0d6efd, #6c63ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .app-subtitle {
+            font-size: 1.3rem;
+            color: #6c757d;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* 功能卡片区域 */
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+        
+        .feature-card {
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #0d6efd, #6c63ff);
+        }
+        
+        .card-icon {
+            font-size: 4rem;
+            margin-bottom: 25px;
+            color: #0d6efd;
+            display: inline-block;
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #212529;
+        }
+        
+        .card-text {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(13, 110, 253, 0.3);
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .app-title {
+                font-size: 2.5rem;
+            }
+            
+            .app-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .features {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .feature-card {
+                max-width: 100%;
+                padding: 30px 20px;
+            }
+            
+            .card-icon {
+                font-size: 3rem;
+            }
+            
+            .card-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .feature-card {
+                padding: 25px 15px;
+            }
+            
+            .card-icon {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="app-title">文件工具集</h1>
+            <p class="app-subtitle">选择您需要的功能</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="card-icon">✂️</div>
+                <h3 class="card-title">文件分割</h3>
+                <p class="card-text">将大文件按照指定大小分割成多个小文件，支持视频、音频、图片等多种格式</p>
+                <a href="/split" class="btn">
+                    <span>→</span>进入分割功能
+                </a>
+            </div>
+            
+            <div class="feature-card">
+                <div class="card-icon">📄</div>
+                <h3 class="card-title">文件生成</h3>
+                <p class="card-text">生成指定类型和大小的文件，支持视频、音频、图片、文档等多种格式</p>
+                <a href="/generate" class="btn">
+                    <span>→</span>进入生成功能
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

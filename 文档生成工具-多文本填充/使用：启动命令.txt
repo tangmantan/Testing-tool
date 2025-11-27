@@ -1,0 +1,6 @@
+生成后的文件可能会小于或者小于预期的大小；txt和PDF生成较快，docx生成缓慢。
+生成的文件存放在generated_files目录中。
+
+当前目录cmd管理员运行
+conda activate myenv3.12
+python 文档生成工具.py

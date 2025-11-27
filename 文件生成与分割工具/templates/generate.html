@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件生成工具</title>
+    <style>
+        /* 基础样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* 头部样式 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            background: linear-gradient(135deg, #0d6efd, #6c63ff);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* 导航按钮 */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .back-btn span {
+            margin-right: 8px;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .form-section {
+            flex: 1;
+            width: 100%;
+        }
+        
+        /* 表单卡片 */
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #0d6efd;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        
+        /* 表单元素 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+        
+        .form-control, .form-select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            outline: none;
+        }
+        
+        .form-check {
+            margin-bottom: 10px;
+        }
+        
+        .form-check-input {
+            margin-right: 8px;
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            display: inline-block;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #0b5ed7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+        
+        /* 文件后缀预设值 */
+        .suffix-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        
+        .suffix-preset {
+            padding: 4px 8px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .suffix-preset:hover {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        /* 输入框清除按钮样式 */
+        .input-with-clear {
+            position: relative;
+        }
+        
+        .clear-btn {
+            position: absolute;
+            right: 35px; /* 增加右侧距离，避免与数字输入框的上下调节按钮重叠 */
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            z-index: 10; /* 确保按钮在最上层 */
+        }
+        
+        .clear-btn:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        /* 针对文本输入框的清除按钮样式 */
+        input[type="text"] + .clear-btn {
+            right: 10px; /* 文本输入框没有上下调节按钮，可以靠右显示 */
+        }
+        
+        /* 文件大小提示样式 */
+        .file-size-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* 输出目录提示样式 */
+        .output-hint {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+            padding: 10px 15px;
+            background-color: #e7f5ff;
+            border-left: 4px solid #0d6efd;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #0c5460;
+        }
+        
+        .info-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        
+        /* 加载状态 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0d6efd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 提示消息 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            max-width: 300px;
+        }
+        
+        .toast.success {
+            border-left: 4px solid #198754;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .toast.info {
+            border-left: 4px solid #0d6efd;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>文件生成工具</h1>
+            <p>生成指定类型和大小的文件，支持视频、音频、图片、文档等多种格式</p>
+        </div>
+        
+        <a href="/" class="back-btn">
+            <span>←</span>返回首页
+        </a>
+        
+        <div class="main-content">
+            <!-- 表单区域 -->
+            <div class="form-section">
+                <div class="card">
+                    <h2 class="card-title">生成设置</h2>
+                    <form id="generateForm">
+                        <div class="form-group">
+                            <label class="form-label">文件类别</label>
+                            <select class="form-select" id="fileCategory" name="fileCategory">
+                                <option value="video">视频</option>
+                                <option value="audio">音频</option>
+                                <option value="image">图片</option>
+                                <option value="document">文档</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="documentTypeGroup">
+                            <label class="form-label">文档类型</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="documentType" id="docx" value="docx" checked>
+                                <label class="form-check-label" for="docx">Word文档 (DOCX)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="documentType" id="pdfCN" value="chinese_pdf">
+                                <label class="form-check-label" for="pdfCN">中文PDF</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="documentType" id="pdfEN" value="english_pdf">
+                                <label class="form-check-label" for="pdfEN">英文PDF</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="documentType" id="txt" value="text">
+                                <label class="form-check-label" for="txt">文本文档 (TXT)</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">文件大小 (MB)</label>
+                            <div class="input-with-clear">
+                                <input type="number" class="form-control" id="fileSize" name="fileSize" min="0.1" max="1000" value="10" step="0.1" required>
+                                <button type="button" class="clear-btn" id="clearFileSize" title="清除">×</button>
+                            </div>
+                            <div class="file-size-hint" id="fileSizeHint">生成的文件大小会比预设值大1kb</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">文件后缀</label>
+                            <div class="input-with-clear">
+                                <input type="text" class="form-control" id="fileSuffix" name="fileSuffix" placeholder="手动输入或从预设值选择">
+                                <button type="button" class="clear-btn" id="clearFileSuffix" title="清除">×</button>
+                            </div>
+                            <div class="suffix-presets" id="suffixPresets">
+                                <!-- 预设值将通过JavaScript动态添加 -->
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn" id="generateBtn">生成文件</button>
+                        
+                        <div class="output-hint">
+                            <i class="info-icon">ℹ️</i>
+                            <span>生成的文件存放在output目录下</span>
+                        </div>
+                    </form>
+                    
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>正在生成文件，请稍候...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // DOM 元素
+        const generateForm = document.getElementById('generateForm');
+        const fileCategory = document.getElementById('fileCategory');
+        const documentTypeGroup = document.getElementById('documentTypeGroup');
+        const generateBtn = document.getElementById('generateBtn');
+        const loading = document.getElementById('loading');
+        const toast = document.getElementById('toast');
+        const fileSuffix = document.getElementById('fileSuffix');
+        const suffixPresets = document.getElementById('suffixPresets');
+        const clearFileSizeBtn = document.getElementById('clearFileSize');
+        const fileSize = document.getElementById('fileSize');
+        const clearFileSuffixBtn = document.getElementById('clearFileSuffix');
+        const fileSizeHint = document.getElementById('fileSizeHint');
+        
+        // 文件后缀预设值配置
+        const suffixPresetsConfig = {
+            video: ['mp4', 'MP4', 'avi', 'AVI', 'mov', 'MOV', 'mkv', 'MKV', 'wmv', 'WMV', 'flv', 'FLV', 'webm', 'WEBM', 'm4v', 'M4V'],
+            audio: ['mp3', 'MP3', 'wav', 'WAV', 'flac', 'FLAC', 'aac', 'AAC', 'ogg', 'OGG', 'wma', 'WMA', 'm4a', 'M4A'],
+            image: ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG', 'gif', 'GIF', 'bmp', 'BMP', 'tiff', 'TIFF', 'webp', 'WEBP'],
+            document: {
+                docx: ['docx', 'DOCX', 'doc', 'DOC'],
+                chinese_pdf: ['pdf', 'PDF'],
+                english_pdf: ['pdf', 'PDF'],
+                text: ['txt', 'TXT']
+            }
+        };
+        
+        // 更新后缀预设值
+        function updateSuffixPresets() {
+            const category = fileCategory.value;
+            let presets = [];
+            
+            if (category === 'document') {
+                // 对于文档类型，需要根据选中的文档类型来确定预设值
+                const selectedDocType = document.querySelector('input[name="documentType"]:checked').value;
+                presets = suffixPresetsConfig.document[selectedDocType] || [];
+            } else {
+                presets = suffixPresetsConfig[category] || [];
+            }
+            
+            // 清空当前预设值
+            suffixPresets.innerHTML = '';
+            
+            // 添加新的预设值
+            presets.forEach(preset => {
+                const presetElement = document.createElement('div');
+                presetElement.className = 'suffix-preset';
+                presetElement.textContent = preset;
+                presetElement.addEventListener('click', function() {
+                    fileSuffix.value = preset;
+                });
+                suffixPresets.appendChild(presetElement);
+            });
+        }
+        
+        // 更新文件大小提示
+        function updateFileSizeHint() {
+            const category = fileCategory.value;
+            
+            if (category === 'document') {
+                // 对于文档类型，需要根据选中的文档类型来确定是否显示提示
+                const selectedDocType = document.querySelector('input[name="documentType"]:checked').value;
+                
+                if (selectedDocType === 'chinese_pdf') {
+                    fileSizeHint.style.display = 'block';
+                } else {
+                    fileSizeHint.style.display = 'none';
+                }
+            } else {
+                fileSizeHint.style.display = 'none';
+            }
+        }
+        
+        // 显示提示消息
+        function showToast(message, type = 'info') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 文件类别变化处理
+        fileCategory.addEventListener('change', function() {
+            if (this.value === 'document') {
+                documentTypeGroup.style.display = 'block';
+            } else {
+                documentTypeGroup.style.display = 'none';
+            }
+            
+            // 更新后缀预设值
+            updateSuffixPresets();
+            
+            // 更新文件大小提示
+            updateFileSizeHint();
+        });
+        
+        // 文档类型变化处理
+        document.querySelectorAll('input[name="documentType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // 更新后缀预设值
+                updateSuffixPresets();
+                
+                // 更新文件大小提示
+                updateFileSizeHint();
+            });
+        });
+        
+        // 初始化文档类型显示状态
+        if (fileCategory.value !== 'document') {
+            documentTypeGroup.style.display = 'none';
+        }
+        
+        // 初始化后缀预设值
+        updateSuffixPresets();
+        
+        // 初始化文件大小提示
+        updateFileSizeHint();
+        
+        // 清除文件大小输入框内容
+        clearFileSizeBtn.addEventListener('click', function() {
+            fileSize.value = '';
+            fileSize.focus();
+        });
+        
+        // 清除文件后缀输入框内容
+        clearFileSuffixBtn.addEventListener('click', function() {
+            fileSuffix.value = '';
+            fileSuffix.focus();
+        });
+        
+        // 根据输入内容显示/隐藏清除按钮
+        fileSize.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                clearFileSizeBtn.style.display = 'flex';
+            } else {
+                clearFileSizeBtn.style.display = 'none';
+            }
+        });
+        
+        fileSuffix.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                clearFileSuffixBtn.style.display = 'flex';
+            } else {
+                clearFileSuffixBtn.style.display = 'none';
+            }
+        });
+        
+        // 初始化清除按钮状态
+        if (fileSize.value.trim() !== '') {
+            clearFileSizeBtn.style.display = 'flex';
+        } else {
+            clearFileSizeBtn.style.display = 'none';
+        }
+        
+        if (fileSuffix.value.trim() !== '') {
+            clearFileSuffixBtn.style.display = 'flex';
+        } else {
+            clearFileSuffixBtn.style.display = 'none';
+        }
+        
+        // 表单提交处理
+        generateForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 获取表单数据
+            const formData = new FormData(generateForm);
+            const fileCategoryValue = formData.get('fileCategory');
+            let documentTypeValue = '';
+            
+            if (fileCategoryValue === 'document') {
+                documentTypeValue = formData.get('documentType');
+            }
+            
+            const fileSize = formData.get('fileSize');
+            const fileSuffixValue = formData.get('fileSuffix') || '';
+            
+            // 显示加载状态
+            generateBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            // 准备请求数据
+            const requestData = {
+                category: fileCategoryValue,
+                size_mb: fileSize,
+                extension: fileSuffixValue
+            };
+            
+            if (documentTypeValue) {
+                requestData.document_type = documentTypeValue;
+            }
+            
+            // 发送请求
+            fetch('/generate_file', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // 隐藏加载状态
+                generateBtn.disabled = false;
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    showToast('文件生成成功！', 'success');
+                } else {
+                    showToast(`生成失败: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                // 隐藏加载状态
+                generateBtn.disabled = false;
+                loading.style.display = 'none';
+                
+                showToast(`请求失败: ${error.message}`, 'error');
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

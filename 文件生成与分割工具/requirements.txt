@@ -1,0 +1,17 @@
+Flask==2.3.3
+Werkzeug==2.3.7
+Pillow==10.0.0
+opencv-python==4.8.1.78
+numpy==1.24.3
+python-docx==0.8.11
+fpdf2==2.7.6
+requests==2.31.0
+
+# 注意事项：
+# 1. FFmpeg需要单独安装并添加到系统PATH中，不是Python包
+# 2. Pillow用于图片处理，如果不需要处理图片可以不安装
+# 3. opencv-python用于视频文件生成
+# 4. numpy用于数值计算，是opencv-python的依赖
+# 5. python-docx用于Word文档生成
+# 6. fpdf2用于PDF文件生成
+# 7. requests用于HTTP请求处理
