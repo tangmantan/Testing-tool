@@ -765,6 +765,9 @@ def generate_file():
         # 确保size_mb是数字类型
         try:
             size_mb = float(size_mb)
+            # 如果是整数，转换为整数以避免文件名出现 10.0M 的情况（可选优化，视原需求而定）
+            if size_mb.is_integer():
+                size_mb = int(size_mb)
         except (ValueError, TypeError):
             return jsonify({'success': False, 'message': '文件大小必须是数字'})
         
@@ -792,8 +795,8 @@ def generate_file():
             sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'addfile'))
             try:
                 from video_add import generate_exact_video
-                # 生成视频文件 - 使用默认格式mp4，生成后再修改为用户指定的格式
-                video_filename = f"{size_mb}M.mp4"  # 视频默认格式为mp4
+                # 生成视频文件 - 使用默认格式mp4
+                video_filename = f"{size_mb}MM.mp4"
                 video_path = os.path.join(app.config['OUTPUT_FOLDER'], video_filename)
                 print(f"🎥 正在生成视频: {video_filename} ({size_mb} MB)...第一个参数{video_path}")
                 generate_exact_video(video_path, size_mb)
@@ -810,8 +813,8 @@ def generate_file():
             sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'addfile'))
             try:
                 from music_add import generate_noise_wav
-                # 生成音频文件 - 使用默认格式wav，生成后再修改为用户指定的格式
-                audio_filename = f"{size_mb}M.wav"  # 音频默认格式为wav
+                # 生成音频文件 - 使用默认格式wav
+                audio_filename = f"{size_mb}MM.wav"
                 audio_path = os.path.join(app.config['OUTPUT_FOLDER'], audio_filename)
                 generate_noise_wav(audio_path, size_mb)
                 if not os.path.exists(audio_path):
@@ -827,8 +830,8 @@ def generate_file():
             sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'addfile'))
             try:
                 from image_add import generate_fixed_size_image
-                # 生成图片文件 - 使用默认格式png，生成后再修改为用户指定的格式
-                image_filename = f"{size_mb}M.png"  # 图片默认格式为png
+                # 生成图片文件 - 使用默认格式png
+                image_filename = f"{size_mb}MM.png"
                 image_path = os.path.join(app.config['OUTPUT_FOLDER'], image_filename)
                 generate_fixed_size_image(image_path, size_mb)
                 if not os.path.exists(image_path):
@@ -845,26 +848,22 @@ def generate_file():
             try:
                 if document_type == 'text':
                     from txt_add import generate_text_file
-                    # 生成文本文件 - 使用默认格式txt，生成后再修改为用户指定的格式
-                    doc_filename = f"{size_mb}M.txt"  # 文本默认格式为txt
+                    doc_filename = f"{size_mb}MM.txt"
                     doc_path = os.path.join(app.config['OUTPUT_FOLDER'], doc_filename)
                     generate_text_file(doc_path, size_mb)
                 elif document_type == 'chinese_pdf':
                     from chinese_pdf import generate_chinese_pdf
-                    # 生成中文PDF - 使用默认格式pdf，生成后再修改为用户指定的格式
-                    doc_filename = f"{size_mb}M.pdf"  # PDF默认格式为pdf
+                    doc_filename = f"{size_mb}MM.pdf"
                     doc_path = os.path.join(app.config['OUTPUT_FOLDER'], doc_filename)
                     generate_chinese_pdf(doc_path, size_mb)
                 elif document_type == 'english_pdf':
                     from english_pdf import generate_english_pdf
-                    # 生成英文PDF - 使用默认格式pdf，生成后再修改为用户指定的格式
-                    doc_filename = f"{size_mb}M.pdf"  # PDF默认格式为pdf
+                    doc_filename = f"{size_mb}MM.pdf"
                     doc_path = os.path.join(app.config['OUTPUT_FOLDER'], doc_filename)
                     generate_english_pdf(doc_path, size_mb)
                 elif document_type in ['docx', 'doc']:
                     from docx_add import generate_fixed_size_docx
-                    # 生成Word文档 - 使用默认格式docx，生成后再修改为用户指定的格式
-                    doc_filename = f"{size_mb}M.docx"  # Word默认格式为docx
+                    doc_filename = f"{size_mb}MM.docx"
                     doc_path = os.path.join(app.config['OUTPUT_FOLDER'], doc_filename)
                     generate_fixed_size_docx(doc_path, size_mb)
                 else:
@@ -878,18 +877,28 @@ def generate_file():
             except Exception as e:
                 return jsonify({'success': False, 'message': f'文档生成过程中出错: {str(e)}'})
         
+        # ------------------ 修改的核心部分 ------------------
         # 获取当前文件的默认格式
         current_filename = os.path.basename(temp_file_path)
-        current_ext = current_filename.rsplit('.', 1)[1].lower()
         
-        # 如果用户指定的格式与默认格式不同，需要重命名
-        if extension.lower() != current_ext:
-            # 生成用户指定格式的文件名，保持用户输入的大小写
+        # 根据后缀名大小写规则生成最终文件名
+        # 如果后缀是全大写 (如 PNG)，则文件名变为 10M1.PNG
+        # 如果后缀是小写 (如 png)，则文件名保持 10M.png
+        if extension.isupper():
+            final_filename = f"{size_mb}M1.{extension}"
+        else:
             final_filename = f"{size_mb}M.{extension}"
-            final_file_path = os.path.join(app.config['OUTPUT_FOLDER'], final_filename)
             
+        final_file_path = os.path.join(app.config['OUTPUT_FOLDER'], final_filename)
+        
+        # 检查是否需要重命名（只要临时路径和最终路径不同，就执行操作）
+        if temp_file_path != final_file_path:
             try:
-                # 直接重命名文件，保留用户输入的后缀名大小写
+                # 如果目标文件已存在，先删除，防止重命名报错
+                if os.path.exists(final_file_path):
+                    os.remove(final_file_path)
+                
+                # 直接重命名文件
                 os.rename(temp_file_path, final_file_path)
             except Exception as e:
                 # 如果重命名失败，尝试复制后删除
@@ -898,27 +907,7 @@ def generate_file():
                     os.remove(temp_file_path)
                 except Exception as e2:
                     return jsonify({'success': False, 'message': f'修改文件后缀失败: {str(e2)}'})
-        else:
-            # 如果用户指定的格式与默认格式相同，但大小写不同，也需要重命名
-            if extension != current_ext:
-                # 生成用户指定格式的文件名，保持用户输入的大小写
-                final_filename = f"{size_mb}M.{extension}"
-                final_file_path = os.path.join(app.config['OUTPUT_FOLDER'], final_filename)
-                
-                try:
-                    # 直接重命名文件，保留用户输入的后缀名大小写
-                    os.rename(temp_file_path, final_file_path)
-                except Exception as e:
-                    # 如果重命名失败，尝试复制后删除
-                    try:
-                        shutil.copy2(temp_file_path, final_file_path)
-                        os.remove(temp_file_path)
-                    except Exception as e2:
-                        return jsonify({'success': False, 'message': f'修改文件后缀失败: {str(e2)}'})
-            else:
-                # 如果用户指定的格式与默认格式完全相同，不需要重命名
-                final_file_path = temp_file_path
-                final_filename = current_filename
+        # ----------------------------------------------------
         
         # 获取最终文件信息
         file_size_mb = round(get_file_size_mb(final_file_path), 2)
@@ -937,7 +926,6 @@ def generate_file():
         # 记录错误到控制台
         print(f"生成文件时发生错误: {str(e)}")
         return jsonify({'success': False, 'message': f'生成过程中发生错误: {str(e)}'})
-
 
 @app.route('/download_file')
 def download_file():
