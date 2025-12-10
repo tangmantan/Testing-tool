@@ -1,0 +1,5 @@
+{
+  "name": "Smart XPath Generator",
+  "description": "An interactive tool that uses AI to generate robust, readable XPath expressions (like //button[text()='Login']) by analyzing HTML elements and their context.",
+  "requestFramePermissions": []
+}
